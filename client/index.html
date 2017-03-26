@@ -1,0 +1,176 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    <script type="text/javascript" src="http://netdna.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <link href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href="http://pingendo.github.io/pingendo-bootstrap/themes/default/bootstrap.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+    <div class="section">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <h1 class="text-center">Memo</h1>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-offset-3 col-md-6">
+                    <form role="form">
+                        <div class="form-group">
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="newMemo" placeholder="Enter your email">
+                                <span class="input-group-btn">
+                                  <a id="addMemo" class="btn btn-success" type="submit" >Go</a>
+                                </span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="section">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Task</th>
+                                <th>Status</th>
+                                <th>Command</th>
+                            </tr>
+                        </thead>
+                        <tbody class="addData">
+                            <!-- bagian append element -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- bagian modal -->
+    <div id="myModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Modal Header</h4>
+                </div>
+                <div class="modal-body">
+                    <p>Task: <input type="text" name="task" value="" class="task"></p>
+                    <p>Status:
+                        <select name="status" class="status">
+                          <option value="1">true</option>
+                          <option value="0">false</option>
+                        </select>
+                    </p>
+                    <input class='button' type='button' value='Update' onclick='updateData()'>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script type="text/javascript">
+    // POST NEW MEMO
+
+
+    // POST NEW MEMO
+    $("#addMemo").click(function() {
+        $.ajax({
+            type: 'POST',
+            url: 'http://localhost:3000/',
+            data: {
+                task: $("input[name='newMemo']").val(),
+                status: 0
+            },
+            success: function(data) {
+                // data = JSON.parse(data)
+                $(".addData").append(
+                    `
+                    <tr>
+                      <td> ${data.task} </td>
+                      <td> ${data.status} </td>
+                      <td>
+                          <a href="" class="btn btn-danger">Delete</a>
+                          <a href="" class="btn btn-primary">Update</a>
+                      </td>
+                    </tr>`
+                );
+            },
+            fail: function(err) {
+                console.log(err);
+            }
+        });
+    });
+
+    // GET ALL MEMO
+    $.ajax({
+        type: 'GET',
+        url: 'http://localhost:3000/',
+        success: function(result) {
+            console.log(result);
+            for (let i = 0; i < result.length; i++) {
+                $(".addData").append(
+                    `
+                    <tr class="${result[i].memoId}">
+                      <td> ${result[i].task} </td>
+                      <td> ${result[i].status} </td>
+                      <td>
+                        <a onclick="remove('${result[i].memoId}')" class="btn btn-danger">Delete</a>
+                        <button type="button" class="btn btn-info" data-toggle="modal" href="#myModal" onclick="updateModal('${result[i].task}', '${result[i].memoId}')">Update</button>
+                      </td>
+                    </tr>`
+                );
+            }
+        }
+    })
+
+    function remove(memoId) {
+        // alert(`".${memoId}"`)
+        $.ajax({
+            type: 'DELETE',
+            url: `http://localhost:3000/${memoId}`,
+            success: function(data) {
+                $(`.${memoId}`).remove();
+            },
+            fail: function(err) {
+                console.log(err);
+            }
+        });
+    }
+
+    function updateModal(data, memoId) {
+        $(".button").attr("onclick", `updateData("${memoId}")`);
+        $(".task").val(data);
+    }
+
+    function updateData(data) {
+        console.log(data);
+        $.ajax({
+            type: 'PUT',
+            url: `http://localhost:3000/${data}`,
+            data: {
+                task: $("input[name='task']").val(),
+                status: $("select[name='status']").val()
+            },
+            success: function(data) {
+                $('#myModal').modal('hide');
+                location.reload();
+            },
+            fail: function(err) {
+                console.log(err);
+            }
+        });
+    }
+</script>
+
+</html>
